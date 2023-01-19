@@ -11,6 +11,7 @@ apple once made a visual style of ads that had a colorful background with a blac
 - hand-drawn rotoscope [gif](https://flexin.io/assets/images/image01.gif?v=50062a09) of Simon Ata doing a 360 degree human flag walk ([source video](https://www.youtube.com/watch?v=z4dUB0GzlN4))
 - [ai](https://github.com/myth-software/ai)
 - [lambdas](https://github.com/myth-software/lambdas)
+- [segmentation mask with mediapipe in touchdesigner](http://www.magicandlove.com/blog/2022/04/15/segmentation-mask-with-mediapipe-in-touchdesigner/) and [script TOP](https://docs.derivative.ca/Script_TOP)
 
 ## techniques
 
@@ -41,7 +42,7 @@ flexion loosely means motions that bend muscles, like lowering your arm from a r
 
 - (1a) locally output a json file representing pose landmarks by referencing [ai](https://github.com/myth-software/ai) for running code locally and [lambdas/calculates-pose](https://github.com/myth-software/lambdas/tree/main/calculates-pose) for json representations
 - (1b) same as 1a, now outputting segmentation mask data as json
-- (1c) assuming a reference implementation is easy to find, implement the reference implementation for blurring a background like on a zoom video using segmentation data
+- (1c) implement this [tutorial](http://www.magicandlove.com/blog/2022/04/15/segmentation-mask-with-mediapipe-in-touchdesigner/) implementation for modifying video using segmentation mask
 
 ## function signatures and types
 
@@ -109,7 +110,7 @@ function calculatesSegmentationMask(video: Video): SegmentationMask {}
  * 1c.
  */
 function calculatesSegmentationMask(video: Video): SegmentationMask {}
-function outputsBlur(video: Video, mask: SegmentationMask): Video {}
+function outputsTutorial(video: Video, mask: SegmentationMask): Video {}
 /**
  * 2a.
  */
