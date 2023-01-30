@@ -31,7 +31,7 @@ def main():
         segment_video(vid, out, threshold)
 
     if args.input:
-        input_path = pathlib.Path('../videos/').glob('*.mp4')
+        input_path = pathlib.Path(args.input).glob('*.mp4')
         for video in input_path:
             for i in range(1,10,1):
                 threshold = round(i*0.1, 1)
@@ -39,7 +39,7 @@ def main():
                 split_path = str(video).split('/')
                 video_name = split_path[-1][:-4]
                 video_path = str(video)
-                
+
                 vid = cv2.VideoCapture(video_path)
 
                 width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
