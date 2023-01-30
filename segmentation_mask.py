@@ -2,8 +2,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import argparse
+import pathlib
 
 mp_segmentation = mp.solutions.selfie_segmentation.SelfieSegmentation
+
 
 def main():
     
@@ -12,17 +14,41 @@ def main():
     parser.add_argument('-v','--video', type=str)
     parser.add_argument('-o','--output', type=str, default=None)
 
+    parser.add_argument('-i','--input', type=str)
+
     args = parser.parse_args()
     
+    if args.video:
     # https://google.github.io/mediapipe/solutions/selfie_segmentation.html
-    BG_COLOR = (255,255,255)
-    vid = cv2.VideoCapture(args.video)
+        vid = cv2.VideoCapture(args.video)
+        print(args.video, type(args.video))
+        width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(vid.get(cv2.CAP_PROP_FPS))
+        codec = cv2.VideoWriter_fourcc('a','v','c','1')
+        out = cv2.VideoWriter(args.output, codec, fps, (width, height))
+        threshold = 0.1 # create arg to pass for threshold?
+        segment_video(vid, out, threshold)
 
-    width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = int(vid.get(cv2.CAP_PROP_FPS))
-    codec = cv2.VideoWriter_fourcc('a','v','c','1')
-    out = cv2.VideoWriter(args.output, codec, fps, (width, height))
+    if args.input:
+        input_path = pathlib.Path('../videos/').glob('*.mp4')
+        for video in input_path:
+            video_path = str(video)
+            vid = cv2.VideoCapture(video_path)
+            width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = int(vid.get(cv2.CAP_PROP_FPS))
+            codec = cv2.VideoWriter_fourcc('a','v','c','1')
+            for i in range(1,10,1):
+                threshold = round(i*0.1, 1)
+                split_path = str(video).split('/')
+                video_name = split_path[-1][:-4]
+                out = cv2.VideoWriter(f'video_output/thresholds/{video_name}_0pt{round(threshold*10)}.mp4', codec, fps, (width, height))
+                segment_video(vid, out, threshold)
+
+
+def segment_video(vid, out, threshold):
+    BG_COLOR = (255,255,255)
 
     # model info: https://drive.google.com/file/d/1dCfozqknMa068vVsO2j_1FgZkW_e3VWv/preview
     # 0 = general, 144x256, "slower"
@@ -47,8 +73,8 @@ def main():
             # cv2.COLOR_RGB2BGR convert order of colors from how cv2 arranges them back to RGB
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) 
 
-            # look into this more: To improve segmentation around boundaries, consider applying a joint bilateral filter to "results.segmentation_mask" with "image"
-            condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
+            # threshold = 0.4 # value between 0 and 1, example code used 0.1
+            condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > threshold
             if bg_image is None:
                 bg_image = np.zeros(image.shape, dtype=np.uint8)
                 bg_image[:] = BG_COLOR
@@ -63,3 +89,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
