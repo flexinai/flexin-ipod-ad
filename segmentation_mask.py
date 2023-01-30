@@ -33,17 +33,22 @@ def main():
     if args.input:
         input_path = pathlib.Path('../videos/').glob('*.mp4')
         for video in input_path:
-            video_path = str(video)
-            vid = cv2.VideoCapture(video_path)
-            width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = int(vid.get(cv2.CAP_PROP_FPS))
-            codec = cv2.VideoWriter_fourcc('a','v','c','1')
             for i in range(1,10,1):
                 threshold = round(i*0.1, 1)
+
                 split_path = str(video).split('/')
                 video_name = split_path[-1][:-4]
+                video_path = str(video)
+                
+                vid = cv2.VideoCapture(video_path)
+
+                width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                fps = int(vid.get(cv2.CAP_PROP_FPS))
+                codec = cv2.VideoWriter_fourcc('a','v','c','1')
+
                 out = cv2.VideoWriter(f'video_output/thresholds/{video_name}_0pt{round(threshold*10)}.mp4', codec, fps, (width, height))
+
                 segment_video(vid, out, threshold)
 
 
