@@ -74,8 +74,15 @@ def main():
 def segment_video(vid, out, threshold, bg='white', person='black'):
 
     # need error handling for colors (mispellings, if they choose a black background and don't specifiy the person)
-    BG_COLOR = webcolors.name_to_rgb(bg, spec=u'css3')
-    FG_COLOR = webcolors.name_to_rgb(person, spec=u'css3')
+    if bg == None:
+        BG_COLOR = (255,255,255)
+    else:
+        BG_COLOR = webcolors.name_to_rgb(bg, spec=u'css3')
+    
+    if person == None:
+        FG_COLOR = (0,0,0)
+    else:
+        FG_COLOR = webcolors.name_to_rgb(person, spec=u'css3')
 
     # model info: https://drive.google.com/file/d/1dCfozqknMa068vVsO2j_1FgZkW_e3VWv/preview
     # 0 = general, 144x256, "slower"
