@@ -3,6 +3,7 @@ import mediapipe as mp
 import numpy as np
 import argparse
 import pathlib
+import webcolors
 
 mp_segmentation = mp.solutions.selfie_segmentation.SelfieSegmentation
 
@@ -17,6 +18,9 @@ def main():
     parser.add_argument('-i','--input', type=str)
     parser.add_argument('-l', '--thresholdlimit', type=str)
 
+    parser.add_argument('-b', '--background', type=str)
+    parser.add_argument('-p', '--person', type=str)
+
     args = parser.parse_args()
     
     if args.video:
@@ -29,7 +33,7 @@ def main():
         codec = cv2.VideoWriter_fourcc('a','v','c','1')
         out = cv2.VideoWriter(args.output, codec, fps, (width, height))
         threshold = 0.1 # create arg to pass for threshold?
-        segment_video(vid, out, threshold)
+        segment_video(vid, out, threshold, args.background, args.person)
 
     if args.input:
         in_dir = str(args.input)
@@ -64,12 +68,14 @@ def main():
 
                 out = cv2.VideoWriter(f'{out_dir}{video_name}_0pt{round(threshold*10)}.mp4', codec, fps, (width, height))
 
-                segment_video(vid, out, threshold)
+                segment_video(vid, out, threshold, args.background, args.person)
 
 
-def segment_video(vid, out, threshold):
-    BG_COLOR = (255,255,255)
-    FG_COLOR = (0,0,0)
+def segment_video(vid, out, threshold, bg='white', person='black'):
+
+    # need error handling for colors (mispellings, if they choose a black background and don't specifiy the person)
+    BG_COLOR = webcolors.name_to_rgb(bg, spec=u'css3')
+    FG_COLOR = webcolors.name_to_rgb(person, spec=u'css3')
 
     # model info: https://drive.google.com/file/d/1dCfozqknMa068vVsO2j_1FgZkW_e3VWv/preview
     # 0 = general, 144x256, "slower"
@@ -111,7 +117,9 @@ def segment_video(vid, out, threshold):
 
             silhouette = cv2.bitwise_not(output_image)
             silhouette = np.ones(silhouette.shape, dtype=np.uint8) # all black
+            silhouette[:] = FG_COLOR # red comes out blue here due to RGB / BGR
             silhouette_image = np.where(condition, silhouette, bg_image)
+            silhouette_image = cv2.cvtColor(silhouette_image, cv2.COLOR_BGR2RGB)
             cv2.imshow("preview", silhouette_image)
             out.write(silhouette_image)
             # out.write(output_image)
