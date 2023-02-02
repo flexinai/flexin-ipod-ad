@@ -89,23 +89,34 @@ def segment_video(vid, out, threshold):
             image.flags.writeable = False
             results = segmentation.process(image)
 
+            person = results.segmentation_mask
+
+            # cv2.imshow('Segmentation Mask', person)
+            # print(person)
+
             # after processing, so you can change the color?
             image.flags.writeable = True
             # cv2.COLOR_RGB2BGR convert order of colors from how cv2 arranges them back to RGB
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) 
 
             # threshold = 0.4 # value between 0 and 1, example code used 0.1
-            condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > threshold
+            condition = np.stack((person,) * 3, axis=-1) > threshold
+            # axis=0: operands could not be broadcast together with shapes (3,1280,720) (1280,720,3) (1280,720,3)
             if bg_image is None:
                 bg_image = np.zeros(image.shape, dtype=np.uint8)
                 bg_image[:] = BG_COLOR
-                # fg_image = image
-                # fg_image[:] = FG_COLOR
-            # output_image = np.where(condition, fg_image, bg_image)
             output_image = np.where(condition, image, bg_image)
+            # output_image = np.where(condition, person, bg_image)
+            # ...operands could not be broadcast together with shapes (1280,720,3) (1280,720) (1280,720,3)
 
-            out.write(output_image)
-            cv2.imshow("Mediapipe Segmentation Mask", output_image)
+            silhouette = cv2.bitwise_not(output_image)
+            silhouette = np.ones(silhouette.shape, dtype=np.uint8) # all black
+            silhouette_image = np.where(condition, silhouette, bg_image)
+            cv2.imshow("preview", silhouette_image)
+            out.write(silhouette_image)
+            # out.write(output_image)
+            # out.write(person)
+            # cv2.imshow("Mediapipe Segmentation Mask", output_image)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
     vid.release()
