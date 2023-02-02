@@ -15,6 +15,7 @@ def main():
     parser.add_argument('-o','--output', type=str, default=None)
 
     parser.add_argument('-i','--input', type=str)
+    parser.add_argument('-l', '--thresholdlimit', type=str)
 
     args = parser.parse_args()
     
@@ -31,14 +32,28 @@ def main():
         segment_video(vid, out, threshold)
 
     if args.input:
-        input_path = pathlib.Path(args.input).glob('*.mp4')
+        in_dir = str(args.input)
+        if args.input[-1] != "/":
+            in_dir = in_dir + "/"
+        input_path = pathlib.Path(in_dir).glob('*.mp4')
+
+        out_dir = str(args.output)
+        if args.output[-1] != "/":
+            out_dir = out_dir + "/"
+
         for video in input_path:
-            for i in range(1,10,1):
+            if args.thresholdlimit:
+                limit = int(args.thresholdlimit) + 1
+            else:
+                limit = 10
+            for i in range(1,limit,1):
                 threshold = round(i*0.1, 1)
 
                 split_path = str(video).split('/')
                 video_name = split_path[-1][:-4]
                 video_path = str(video)
+
+                print(f"processing {video_name}.mp4 with a threshold of {threshold} ...")
 
                 vid = cv2.VideoCapture(video_path)
 
@@ -47,13 +62,14 @@ def main():
                 fps = int(vid.get(cv2.CAP_PROP_FPS))
                 codec = cv2.VideoWriter_fourcc('a','v','c','1')
 
-                out = cv2.VideoWriter(f'video_output/thresholds/{video_name}_0pt{round(threshold*10)}.mp4', codec, fps, (width, height))
+                out = cv2.VideoWriter(f'{out_dir}{video_name}_0pt{round(threshold*10)}.mp4', codec, fps, (width, height))
 
                 segment_video(vid, out, threshold)
 
 
 def segment_video(vid, out, threshold):
     BG_COLOR = (255,255,255)
+    FG_COLOR = (0,0,0)
 
     # model info: https://drive.google.com/file/d/1dCfozqknMa068vVsO2j_1FgZkW_e3VWv/preview
     # 0 = general, 144x256, "slower"
@@ -83,6 +99,9 @@ def segment_video(vid, out, threshold):
             if bg_image is None:
                 bg_image = np.zeros(image.shape, dtype=np.uint8)
                 bg_image[:] = BG_COLOR
+                # fg_image = image
+                # fg_image[:] = FG_COLOR
+            # output_image = np.where(condition, fg_image, bg_image)
             output_image = np.where(condition, image, bg_image)
 
             out.write(output_image)
