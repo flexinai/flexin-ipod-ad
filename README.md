@@ -1,5 +1,35 @@
 # demo
 
+# instructions
+
+create virtual environment and activate it
+
+run `pip install -r requirements.txt`
+
+create silhouette videos by running `segmentation_mask.py` and passing in input path of the video or videos, and the output path to save the silhouette versions in, plus other options with defaults if they are not included:
+
+- input path: `-i` or `--input`
+- output path: `-o` or `--output`
+- color name for background: `-b` or `--background` (default white)
+- color name for person's silhouette: `-p` or `--person` (default black)
+- enter threshold 1-9 (converted to 0.1 - 0.9) to adjust the segmentation between the person and the background: `-t` or `--threshold` (default 1)
+- threshold limit for output of multiple videos with a threshold difference of 1 between them: `-l` or `--thresholdlimit` (default 1 video output per video input)
+
+to segment all videos in a Desktop folder called `my_videos` to a folder in this repo called `video_output` in black and white, an example could be:
+
+- `python segmentation_mask.py -i ~/Desktop/my_videos/ -o ./video_output/`
+- `python segmentation_mask.py -i ~/Desktop/my_videos -o ./video_output`
+
+to segment one particular video in that folder examples could be:
+
+- `python segmentation_mask.py -i ~/Desktop/my_videos/handstand.mp4 -o ./video_output/ -b aqua -p black -t 1.5`
+
+  (video will be saved as `./video_output/handstand_silhouette_0pt15.mp4`)
+
+- `python segmentation_mask.py -i ~/Desktop/my_videos/handstand.mp4 -o ./video_output/ -b aqua -p black -l 3`
+
+  (videos will be saved as `./video_output/handstand_silhouette_0pt1.mp4`, `handstand_silhouette_0pt2.mp4`, `handstand_silhouette_0pt3.mp4`)
+
 ## overview
 
 **summary**  
