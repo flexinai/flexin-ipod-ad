@@ -17,6 +17,8 @@ def main():
     parser.add_argument('-p', '--person', type=str)
     parser.add_argument('-t', '--threshold', type=float)
     parser.add_argument('-l', '--thresholdlimit', type=int)
+    parser.add_argument('-s', '--start', type=int)
+    parser.add_argument('-e', '--end', type=int)
 
     args = parser.parse_args()
 
@@ -45,7 +47,7 @@ def main():
             codec = cv2.VideoWriter_fourcc('a','v','c','1')
             out = cv2.VideoWriter(f'{out_dir}{video_name}_silhouette_{threshold_notation}.mp4', codec, fps, (width, height))
 
-            segment_video(vid, out, threshold, args.background, args.person)
+            segment_video(vid, out, threshold, args.start, args.end, args.background, args.person)
             print(f'Video saved to: {out_dir}{video_name}_silhouette_{threshold_notation}.mp4')
     
     split_input = args.input.split('/')
@@ -90,7 +92,18 @@ def main():
 
             handle_thresholds(str(video), threshold_x10, limit, args.output)
            
-def segment_video(vid, out, threshold, bg='white', person='black'):
+def segment_video(vid, out, threshold, start_significant, end_significant, bg='white', person='black'):
+    # get number of images (frames) in video
+    frame_total = int(vid.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(vid.get(cv2.CAP_PROP_FPS))
+
+    if start_significant == None:
+        start_significant = frame_total
+    if end_significant == None:
+        end_significant = 0
+        
+    switch_frame_1 = start_significant * fps
+    switch_frame_2 = end_significant * fps
 
     # need error handling for colors (mispellings, if they choose a black background and don't specifiy the person)
     if bg == None:
@@ -103,12 +116,19 @@ def segment_video(vid, out, threshold, bg='white', person='black'):
     else:
         FG_COLOR = webcolors.name_to_rgb(person, spec=u'css3')
 
+    significant = webcolors.name_to_rgb(person, spec=u'css3')
+    insignificant = (0,0,0)
+
     # model info: https://drive.google.com/file/d/1dCfozqknMa068vVsO2j_1FgZkW_e3VWv/preview
     # 0 = general, 144x256, "slower"
     # 1 = landscape, 256x256, "faster"
     with mp_segmentation(model_selection=1) as segmentation:
         bg_image = None
+
+        count = 0
         while vid.isOpened():
+            count += 1
+            # print(count)
             success, image = vid.read()
             if not success:
                 print("ignoring empty video")
@@ -128,6 +148,14 @@ def segment_video(vid, out, threshold, bg='white', person='black'):
 
             # after processing, so you can change the color?
             image.flags.writeable = True
+            
+            # if count < switch_frame:
+            #     print("count < switch_frame", count)
+            #     BG_COLOR = (255,255,255)
+            # else:
+            #     print("count > switch_frame", count)
+            #     BG_COLOR = webcolors.name_to_rgb(bg, spec=u'css3')
+
             # cv2.COLOR_RGB2BGR convert order of colors from how cv2 arranges them back to RGB
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) 
 
@@ -144,6 +172,17 @@ def segment_video(vid, out, threshold, bg='white', person='black'):
             silhouette = cv2.bitwise_not(output_image)
             silhouette = np.ones(silhouette.shape, dtype=np.uint8) # all black
             silhouette[:] = FG_COLOR # red comes out blue here due to RGB / BGR
+            
+            if count < switch_frame_1 and count < switch_frame_2:
+                print(count)
+                FG_COLOR = (0,0,0) # insignificant
+            elif count > switch_frame_1 and count < switch_frame_2:
+                print(count)
+                FG_COLOR = (255,255,255) # significant
+            if count > switch_frame_1 and count > switch_frame_2:
+                print(count)
+                FG_COLOR = (0,0,0) # insignificant
+
             silhouette_image = np.where(condition, silhouette, bg_image)
             silhouette_image = cv2.cvtColor(silhouette_image, cv2.COLOR_BGR2RGB)
             cv2.imshow("preview", silhouette_image)
