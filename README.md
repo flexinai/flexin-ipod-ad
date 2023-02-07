@@ -14,6 +14,8 @@ create silhouette videos by running `segmentation_mask.py` and passing in input 
 - color name for person's silhouette: `-p` or `--person` (default black)
 - enter threshold 1-9 (converted to 0.1 - 0.9) to adjust the segmentation between the person and the background: `-t` or `--threshold` (default 1)
 - threshold limit for output of multiple videos with a threshold difference of 1 between them: `-l` or `--thresholdlimit` (default 1 video output per video input)
+- seconds in video to switch background color on, separated by - : `-s` or `--switch`
+- alternate background color to switch with the first color: `-a` or `altbackground`
 
 to segment all videos in a Desktop folder called `my_videos` to a folder in this repo called `video_output` in black and white, an example could be:
 
@@ -29,6 +31,10 @@ to segment one particular video in that folder examples could be:
 - `python segmentation_mask.py -i ~/Desktop/my_videos/handstand.mp4 -o ./video_output/ -b aqua -p black -l 3`
 
   (videos will be saved as `./video_output/handstand_silhouette_0pt1.mp4`, `handstand_silhouette_0pt2.mp4`, `handstand_silhouette_0pt3.mp4`)
+
+- `python segmentation_mask.py -i ~/Desktop/my_videos/handstand.mp4 -o ./video_output/ -b aqua -p black -s 0.7-3.58-5-7-9 -a fuchsia`
+
+  (change between aqua and fuchsia at 0.7 seconds, 3.6 seconds (rounds from 3.58), 5 seconds, 7 seconds, and 9 seconds)
 
 ## overview
 
