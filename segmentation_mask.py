@@ -106,10 +106,8 @@ def segment_video(vid, out, threshold, start_significant, end_significant, bg='w
     switch_frame_2 = end_significant * fps
 
     # need error handling for colors (mispellings, if they choose a black background and don't specifiy the person)
-    if bg == None:
-        BG_COLOR = (255,255,255)
-    else:
-        BG_COLOR = webcolors.name_to_rgb(bg, spec=u'css3')
+    bg_colors = [(255,255,255), webcolors.name_to_rgb(bg, spec=u'css3')]
+    BG_COLOR = bg_colors[0]
     
     if person == None:
         FG_COLOR = (0,0,0)
@@ -162,9 +160,10 @@ def segment_video(vid, out, threshold, start_significant, end_significant, bg='w
             # threshold = value between 0 and 1, example code used 0.1
             condition = np.stack((person,) * 3, axis=-1) > threshold
             # axis=0: operands could not be broadcast together with shapes (3,1280,720) (1280,720,3) (1280,720,3)
-            if bg_image is None:
-                bg_image = np.zeros(image.shape, dtype=np.uint8)
-                bg_image[:] = BG_COLOR
+
+            # if bg_image is None: # removed this and un-indented next 2 lines to enable change of background color
+            bg_image = np.zeros(image.shape, dtype=np.uint8)
+            bg_image[:] = BG_COLOR
             output_image = np.where(condition, image, bg_image)
             # output_image = np.where(condition, person, bg_image)
             # ...operands could not be broadcast together with shapes (1280,720,3) (1280,720) (1280,720,3)
@@ -175,13 +174,13 @@ def segment_video(vid, out, threshold, start_significant, end_significant, bg='w
             
             if count < switch_frame_1 and count < switch_frame_2:
                 print(count)
-                FG_COLOR = (0,0,0) # insignificant
+                BG_COLOR = bg_colors[0] # (0,0,0) # insignificant
             elif count > switch_frame_1 and count < switch_frame_2:
-                print(count)
-                FG_COLOR = (255,255,255) # significant
+                print(count, BG_COLOR)
+                BG_COLOR = bg_colors[1] # (255,255,255) # significant
             if count > switch_frame_1 and count > switch_frame_2:
                 print(count)
-                FG_COLOR = (0,0,0) # insignificant
+                BG_COLOR = bg_colors[0] # (0,0,0) # insignificant
 
             silhouette_image = np.where(condition, silhouette, bg_image)
             silhouette_image = cv2.cvtColor(silhouette_image, cv2.COLOR_BGR2RGB)
